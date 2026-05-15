@@ -1,0 +1,156 @@
+// App.jsx
+import React, { useState } from 'react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { SearchBar } from './components/SearchBar.jsx'; // Assume this file exists
+import { AccountInfoDisplay } from './components/AccountInfoDisplay.jsx'; // Assume this file exists
+
+function App() {
+  const [targetPublicKey, setTargetPublicKey] = useState(null);
+
+  const handleSearch = (publicKey) => {
+    setTargetPublicKey(publicKey);
+  };
+
+  return (
+    // 1. Full viewport, dark background with subtle gradient
+    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center 
+                    bg-gradient-to-br from-gray-900 to-black p-4 sm:p-8 font-sans">
+
+      {/* 2. Header: Centered, wide, with flex layout for title and wallet button */}
+      <header className="w-full max-w-7xl mb-12 py-4 border-b border-gray-700/50">
+        <div className="flex justify-between items-center px-2 sm:px-0">
+          
+          {/* Title with a vibrant, modern color scheme */}
+          <h1 className="text-2xl sm:text-4xl font-extrabold text-transparent 
+                         bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 
+                         tracking-tight">
+            Solana Explorer
+          </h1>
+          
+          {/* Wallet Button Container */}
+          <div className="pl-4">
+            {/* The WalletMultiButton styling is handled by its library, but it looks good here */}
+            <WalletMultiButton />
+          </div>
+        </div>
+      </header>
+      
+      {/* 3. Main Content: Centered, constrained width for readability */}
+      <main className="w-full max-w-4xl space-y-8 flex-grow">
+        
+        {/* Search Bar - Center and give it professional padding */}
+        <div className="p-4 bg-gray-800/60 rounded-xl shadow-2xl shadow-indigo-900/10">
+          <h2 className="text-lg font-semibold text-gray-300 mb-4 border-b border-gray-700 pb-2">
+            Search Public Key
+          </h2>
+          <SearchBar onSearch={handleSearch} />
+        </div>
+        
+        {/* Account Info Display - The main content block */}
+        <div className="p-6 sm:p-8 bg-gray-800 rounded-xl shadow-2xl shadow-indigo-900/30 
+                        border border-gray-700/50 min-h-[300px]">
+          <AccountInfoDisplay publicKeyStr={targetPublicKey} />
+        </div>
+      </main>
+
+      {/* 4. Footer: Fixed at the bottom, small and subtle */}
+      <footer className="mt-auto pt-10 text-xs text-gray-500 w-full max-w-4xl text-center">
+          <p>
+            Powered by Solana & Tailwind CSS | Designed by a Seasoned Developer ({new Date().getFullYear()})
+          </p>
+      </footer>
+    </div>
+  );
+}
+
+export default App;
+
+=====
+
+// import React, { useEffect, useState } from 'react';
+// import { PublicKey } from '@solana/web3.js';
+// import { useConnection } from '@solana/wallet-adapter-react';
+
+// export const AccountInfoDisplay = ({ publicKeyStr }) => {
+//     const { connection } = useConnection();
+//     const [balance, setBalance] = useState(null);
+//     const [transactions, setTransactions] = useState([]);
+//     const [error, setError] = useState(null);
+//     const [isLoading, setIsLoading] = useState(false);
+
+//     useEffect(() => {
+//         const fetchAccountData = async () => {
+//             if (!publicKeyStr) {
+//                 setBalance(null);
+//                 setTransactions([]);
+//                 setError(null);
+//                 return;
+//             }
+
+//             setIsLoading(true);
+//             setError(null);
+
+//             try {
+//                 const publicKey = new PublicKey(publicKeyStr);
+
+//                 // Fetch SOL Balance
+//                 const solBalanceLamports = await connection.getBalance(publicKey);
+//                 // Convert lamports to SOL (1 billion lamports = 1 SOL)
+//                 setBalance(solBalanceLamports / 1_000_000_000); 
+
+//                 // Fetch Recent Transactions (up to 5 for simplicity)
+//                 const signatures = await connection.getSignaturesForAddress(publicKey, { limit: 5 });
+//                 setTransactions(signatures.map(sigInfo => sigInfo.signature));
+
+//             } catch (err) {
+//                 console.error("Error fetching account data:", err);
+//                 setError(`Failed to fetch account data. Check if the key is valid and on Devnet.`);
+//                 setBalance(null);
+//                 setTransactions([]);
+//             } finally {
+//                 setIsLoading(false);
+//             }
+//         };
+
+//         fetchAccountData();
+//     }, [publicKeyStr, connection]);
+
+//     if (!publicKeyStr) {
+//         return <p>Enter a public key to view its details.</p>;
+//     }
+
+//     if (isLoading) {
+//         return <p>Loading account data...</p>;
+//     }
+
+//     if (error) {
+//         return <p style={{ color: 'red' }}>Error: {error}</p>;
+//     }
+
+//     return (
+//         <div>
+//             <h2>Account Details</h2>
+//             <p><strong>Public Key:</strong> {publicKeyStr}</p>
+//             {balance !== null && <p><strong>SOL Balance:</strong> {balance} SOL</p>}
+
+//             <h3>Recent Transactions:</h3>
+//             {transactions.length > 0 ? (
+//                 <ul>
+//                     {transactions.map((sig) => (
+//                         <li key={sig}>
+//                             <a
+//                                 href={`https://solana.fm/tx/${sig}?cluster=devnet`} 
+//                                 target="_blank"
+//                                 rel="noopener noreferrer"
+//                             >
+//                                 {sig.substring(0, 30)}...
+//                             </a>
+//                         </li>
+//                     ))}
+//                 </ul>
+//             ) : (
+//                 <p>No recent transactions found.</p>
+//             )}
+//         </div>
+//     );
+// };

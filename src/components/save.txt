@@ -1,0 +1,114 @@
+import React from 'react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import '@solana/wallet-adapter-react-ui/styles.css'; // keep the wallet button’s UI isolated
+
+export const Navbar = () => {
+  return (
+    <nav className="w-full bg-gray-400 text-white shadow-md">
+      <div className="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
+        {/* Left: App title */}
+        <h1 className="text-2xl font-bold tracking-wide">
+          Solana Explorer
+        </h1>
+
+        {/* Right: Wallet button */}
+        <div className="wallet-button-container">
+          <WalletMultiButton />
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+
+====
+import React, { useEffect, useState } from 'react';
+import { PublicKey } from '@solana/web3.js';
+import { useConnection } from '@solana/wallet-adapter-react';
+
+export const AccountInfoDisplay = ({ publicKeyStr }) => {
+    const { connection } = useConnection();
+    const [balance, setBalance] = useState(null);
+    const [transactions, setTransactions] = useState([]);
+    const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [refreshTrigger, setRefreshTrigger] = useState(0); // 👈 add trigger for re-fetch
+
+    const fetchAccountData = async () => {
+        if (!publicKeyStr) {
+            setBalance(null);
+            setTransactions([]);
+            setError(null);
+            return;
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const publicKey = new PublicKey(publicKeyStr);
+
+            // force RPC fresh data
+            const solBalanceLamports = await connection.getBalance(publicKey, { commitment: 'confirmed' });
+            setBalance(solBalanceLamports / 1_000_000_000);
+
+            const signatures = await connection.getSignaturesForAddress(publicKey, { limit: 5 });
+            setTransactions(signatures.map(sigInfo => sigInfo.signature));
+
+        } catch (err) {
+            console.error("Error fetching account data:", err);
+            setError("Failed to fetch account data. Check if the key is valid and on Devnet.");
+            setBalance(null);
+            setTransactions([]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchAccountData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [publicKeyStr, refreshTrigger]); // 👈 re-run when refreshed
+
+    if (!publicKeyStr) return <p>Enter a public key to view its details.</p>;
+    if (isLoading) return <p>Loading account data...</p>;
+    if (error) return <p className="text-red-500">Error: {error}</p>;
+
+    return (
+        <div className="bg-gray-800 text-white rounded-lg p-6 shadow-lg w-full max-w-2xl mx-auto mt-6">
+            <h2 className="text-2xl font-semibold mb-4">Account Details</h2>
+            <p><strong>Public Key:</strong> {publicKeyStr}</p>
+            {balance !== null && <p><strong>SOL Balance:</strong> {balance} SOL</p>}
+
+            <button
+                onClick={() => setRefreshTrigger(prev => prev + 1)}
+                className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition"
+            >
+                🔄 Refresh
+            </button>
+
+            <h3 className="text-xl mt-6 mb-2">Recent Transactions:</h3>
+            {transactions.length > 0 ? (
+                <ul className="space-y-2">
+                    {transactions.map(sig => (
+                        <li key={sig}>
+                            <a
+                                href={`https://solana.fm/tx/${sig}?cluster=devnet`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:text-blue-300 underline transition"
+                            >
+                                {sig.substring(0, 30)}...
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p>No recent transactions found.</p>
+            )}
+        </div>
+    );
+};
+
+
+
