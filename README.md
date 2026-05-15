@@ -1,4 +1,4 @@
-https://block-explorer-main.vercel.app
+(https://block-explorer-main-ecru.vercel.app/)
 # Solana Devnet Explorer
 
 A personal project for exploring Solana accounts, transactions, and balances on the **Devnet**.  
